@@ -277,7 +277,7 @@ export default function Navbarmain() {
 
       {/* Mobile Menu */}
       <div
-        className={`${isMenuOpen ? "flex" : "hidden"} lg:hidden flex-col items-center text-slate-400 py-6 gap-6`}
+        className={`${isMenuOpen ? "flex" : "hidden"} lg:hidden flex-col items-center text-slate-900 py-6 gap-6`}
       >
         <ul className="mt-8 font-Montserrat text-[32px] font-thin tracking-wider flex flex-col gap-6 items-center">
           <li className="text-lg">
