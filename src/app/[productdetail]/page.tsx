@@ -1,192 +1,97 @@
-"use client";
-import { useContext, useState } from "react";
 import Image from "next/image";
-import { data } from "../components/data";
-import GreenHeader from "../components/GreenHeader";
-import Navbarmain from "../components/Navbarmain";
+import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
-import { CartContext } from "../components/context";
+import Link from "next/link";
+import { Product } from "./CartProvider";
 
-const ColorSelector = ({
-  selectedColor,
-  handleColorChange,
-}: {
-  selectedColor: string;
-  handleColorChange: (color: string) => void;
-}) => {
-  const colors = [
-    { name: "Blue", code: "#3b82f6" },
-    { name: "Green", code: "#22c55e" },
-    { name: "Orange", code: "#f97316" },
-    { name: "Black", code: "#000000" },
-  ];
-
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700">Color:</h3>
-      <div className="flex items-center gap-2 mt-2">
-        {colors.map((color) => (
-          <label key={color.name} style={{ cursor: "pointer" }}>
-            <input
-              type="radio"
-              name="color"
-              value={color.name + color.code}
-              checked={selectedColor === color.name}
-              onChange={() => handleColorChange(color.name)}
-              className="hidden"
-            />
-            <span
-              className={`h-8 w-8 px-3 py-1 rounded-full ${selectedColor === color.name ? "ring-2 ring-black" : "border-2 border-gray-300"}`}
-              style={{
-                backgroundColor: color.code,
-              }}
-              title={color.name}
-            ></span>
-          </label>
-        ))}
-      </div>
-    </div>
+async function getData() {
+  const data = await client.fetch(
+    '*[_type == "product"]{title, description, price, "id": _id, tags, dicountPercentage, isNew, "image": productImage}'
   );
-};
-
-interface ProductPageProps {
-  params: {
-    productdetail: string;
-  };
+  return data;
 }
 
-type Product = {
-  _id: string;
-  title: string;
-  price: number;
-  quantity: number;
-  selectedColor: string;
-  productImage: string; // Replace with actual type for images
-};
-
-export default function DynamicProductDetail({
-  params: { productdetail },
-}: ProductPageProps) {
-  const [selectedColor, setSelectedColor] = useState<string>("Blue");
-  const [isDescriptionExpanded, setDescriptionExpanded] =
-    useState<boolean>(false);
-  const handleColorChange = (color: string) => {
-    setSelectedColor(color);
-  };
-
-  const { addCart, addWish } = useContext(CartContext);
-  const toggleDescription = () => {
-    setDescriptionExpanded(!isDescriptionExpanded);
-  };
-
-  const Id = productdetail;
-  const product = data.find((products: Product) => products._id === Id);
+export default async function ProductCardhome() {
+  const data = await getData();
 
   return (
-    <>
-      <GreenHeader />
-      <Navbarmain />
-      <div className="container mx-auto px-4 flex flex-col justify-center lg:flex-row gap-8 lg:gap-16 font-Montserrat">
-        {/* Left Section - Image Slider */}
-        <div className=" ">
-          <div className="relative">
-            <Image
-              src={urlFor(product.productImage)
-                .width(640)
-                .height(800)
-                .fit("crop")
-                .url()}
-              alt="Product Image"
-              className="rounded-lg"
-              width={400}
-              height={100}
-            />
-            {/* Discount Badge (only show if there's a discount) */}
-            {product.dicountPercentage > 0 && (
-              <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded-lg">
-                {`${product.dicountPercentage}%`}
-              </div>
-            )}
-          </div>
+    <div className="w-full flex justify-center bg-white py-10 lg:pt-10 pb-20">
+      <div className="w-full max-w-[1124px] flex flex-col gap-20 mt-12 sm:mt-8 md:ml-12 sm:px-4">
+        {/* Header Section */}
+        <div className="flex flex-col items-center gap-2">
+          <h4 className="font-Montserrat font-medium tracking-wider text-xl md:text-[20px] text-[#737373]">
+            Featured Products
+          </h4>
+          <h3 className="font-Montserrat font-bold text-2xl md:text-[24px] text-center w-40 sm:w-full tracking-tight text-[#252B42]">
+            BESTSELLER PRODUCTS
+          </h3>
+          <p className="font-Montserrat font-medium tracking-wider text-[14px] md:text-[16px] w-52 sm:w-full text-[#737373] text-center">
+            Problems trying to resolve the conflict between
+          </p>
         </div>
 
-        {/* Right Section - Product Details */}
-        <div className=" lg:w-[600px]">
-          {/* Product Title and Rating */}
-          <h1 className="text-2xl font-semibold text-gray-800">
-            {product.title}
-          </h1>
-          <div className="flex items-center mt-2">
-            <span className="flex items-center text-yellow-400">
-              <Image src={"/star.png"} alt="star" width={24} height={24} />
-              <Image src={"/star.png"} alt="star" width={24} height={24} />
-              <Image src={"/star.png"} alt="star" width={24} height={24} />
-              <Image src={"/star.png"} alt="star" width={24} height={24} />
-              <Image src={"/starr.png"} alt="starr" width={24} height={24} />
-            </span>
-            <p className="ml-2 text-sm text-gray-500">(10 Reviews)</p>
-          </div>
-
-          {/* Description */}
-          <p className="text-gray-700 mt-4">
-            {isDescriptionExpanded
-              ? product.description
-              : `${product.description.substring(0, 650)}...`}
-          </p>
-
-          {/* Read More Button */}
-          <button
-            onClick={toggleDescription}
-            className="text-[#23A6F0] font-semibold mt-2"
-          >
-            {isDescriptionExpanded ? "Read Less" : "Read More"}
-          </button>
-
-          {/* Tags */}
-          {product.tags && product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {product.tags.map((tag: string, index: number) => (
-                <span
-                  key={index}
-                  className="text-sm bg-[#E0E0E0] text-[#252B42] py-1 px-3 rounded-md"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Color Options */}
-          <ColorSelector
-            selectedColor={selectedColor}
-            handleColorChange={handleColorChange}
-          />
-          {/* Price and Availability */}
-          <p className="text-2xl font-Montserrat font-semibold text-black mt-4">
-            ${product.price}
-          </p>
-          {/* Buttons */}
-          <div className="mt-6 flex items-center gap-4">
-            <button
-              className="px-6 py-2 bg-[#23A6F0] text-white rounded-md hover:bg-blue-600"
-              onClick={() => addCart({ ...product, selectedColor })}
+        {/* Product Cards Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 justify-center lg:grid-cols-4 lg:gap-x-4 lg:gap-y-20 gap-4">
+          {data.map((product: Product) => (
+            <Link href={`/${product.id}`}>
+            <div
+              key={product.id}
+              className="flex flex-col items-center bg-[#F9F9F9] rounded-md mx-auto shadow-sm p-4 sm:p-6 lg:p-8"
             >
-              Add to Cart
-            </button>
-            {/* Favorite/Action Icons */}
-            <div className="flex items-center gap-4 ">
-              <Image
-                src={"/heart.png"}
-                alt="heart"
-                width={24}
-                height={24}
-                className="cursor-pointer"
-                onClick={() => addWish({ ...product, selectedColor })}
-              />
+              {/* Product Image */}
+              <div className="relative w-full h-auto mb-4">
+                  <Image
+                    src={urlFor(product.image)
+                      .width(640)
+                      .height(480)
+                      .fit("crop")
+                      .url()}
+                    alt={product.title}
+                    width={1000}
+                    height={200}
+                    className="rounded-sm object-cover"
+                  />
+
+                  {/* Discount Badge (only show if there's a discount) */}
+                  {product.dicountPercentage > 0 && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded-lg">
+                      {`${product.dicountPercentage}%`}
+                    </div>
+                  )}
+               
+              </div>
+
+              {/* Product Text and Info */}
+              <div className="w-full flex flex-col items-center justify-center gap-4">
+                <h5 className="font-Montserrat font-bold text-[16px] leading-[24px] text-center text-[#252B42]">
+                  {product.title}
+                </h5>
+
+                {/* Truncated Description */}
+                <p className="font-Montserrat font-bold text-[14px] leading-[24px] text-center text-gray-600 line-clamp-3 sm:line-clamp-4 md:line-clamp-3">
+                  {product.description}
+                </p>
+
+                {/* Price */}
+                <h5 className="font-Montserrat font-bold text-2xl leading-[24px] text-[#23856D]">
+                  ${product.price}
+                </h5>
+
+                {/* Colors */}
+                <div className="w-[82.2px] h-[16px] flex justify-center mt-4">
+                  <Image
+                    src={"/product-colors.png"}
+                    alt="colours"
+                    width={82.2}
+                    height={64}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
+          ))}
         </div>
       </div>
-    </>
-  );
+      </div>
+    );
 }
